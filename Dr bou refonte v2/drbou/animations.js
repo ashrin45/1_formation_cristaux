@@ -43,6 +43,11 @@ window.DRBOU_ANIMATIONS = {
    "facteur": 1,
    "neutre_px": 512
   },
+  "2x": {
+   "dossier": "images/2x",
+   "facteur": 2,
+   "neutre_px": 1024
+  },
   "site": {
    "dossier": "images/site",
    "facteur": 0.625,
