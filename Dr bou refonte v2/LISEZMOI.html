@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dr Bou, mode d'emploi</title>
+<style>
+:root{--bg:#f5f2ec;--surface:#fffdf9;--fg:#26211c;--muted:#6c645b;--line:#ddd5ca;--accent:#b8571f;--code:#efe9df;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171513;--surface:#211e1b;--fg:#ece6dd;--muted:#a99f93;--line:#38332d;--accent:#e38a52;--code:#2b2723;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 system-ui,"Segoe UI",sans-serif}
+main{max-width:920px;margin:0 auto;padding:32px 16px 64px}
+h1{font-size:2rem;margin:0 0 6px} h2{font-size:1.35rem;margin:40px 0 10px;padding-top:12px;border-top:1px solid var(--line)} h3{font-size:1.05rem;margin:22px 0 6px}
+p,li{max-width:78ch} .muted{color:var(--muted)}
+code{font:.88em ui-monospace,Consolas,monospace;background:var(--code);padding:1px 5px;border-radius:4px}
+pre{font:13px/1.5 ui-monospace,Consolas,monospace;background:var(--code);padding:12px 14px;border-radius:8px;overflow:auto}
+pre code{background:none;padding:0}
+table{border-collapse:collapse;width:100%;font-size:.88rem;display:block;overflow-x:auto}
+th,td{border-bottom:1px solid var(--line);padding:5px 8px;text-align:left;vertical-align:top}
+th{color:var(--muted);font-weight:600}
+.note{background:var(--surface);border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px}
+nav a{color:var(--accent)} nav ol{columns:2;gap:24px}
+</style>
+</head>
+<body>
+<main>
+<h1>Dr Bou, mode d'emploi</h1>
+<p><b>Dans ce dépôt :</b> seules les versions <code>site</code> (320 px) et <code>1x</code> (512 px) sont fournies. La version <code>2x</code> (1024 px, 95 Mo) est restée hors du dépôt pour l’alléger ; le lecteur prend <code>1x</code> par défaut.</p>
+<p class="muted">Paquet construit le 2026-10-24 16:50 par <code>mascotte\paquet_site.py</code>. Il ne contient que ce qu'Ahmed a validé.</p>
+<nav><ol>
+<li><a href="#contenu">Ce que contient le paquet</a></li>
+<li><a href="#essayer">Essayer tout de suite</a></li>
+<li><a href="#installer">Installer sur n'importe quel site</a></li>
+<li><a href="#piloter">Piloter Dr Bou en JavaScript</a></li>
+<li><a href="#json">Le fichier animations.json</a></li>
+<li><a href="#exemples">Exemples de modifications</a></li>
+<li><a href="#site">Sur ton site</a></li>
+<li><a href="#clips">Liste des clips</a></li>
+<li><a href="#manque">Ce qui manque</a></li>
+</ol></nav>
+
+<h2 id="contenu">1. Ce que contient le paquet</h2>
+<pre><code>drbou_site_test\
+  LISEZMOI.html          ce guide
+  demo.html              la démonstration (tous les enchaînements, la vitesse, le vol de A à B)
+  drbou\                 LE dossier à copier sur un site
+    drbou.js             le lecteur (JavaScript natif, aucune dépendance)
+    animations.json      la description des clips et des enchaînements (c'est lui qu'on modifie)
+    animations.js        copie du JSON, seulement pour ouvrir la démo par double-clic
+    images\site\         images légères : cadre de la neutre de 320 px (16,5 Mo)
+    images\1x\           cadre de la neutre de 512 px (37,2 Mo)
+    images\2x\           cadre de la neutre de 1024 px, pour les écrans haute densité (95,0 Mo)</code></pre>
+<p>Poids total du dossier : 148,8 Mo. Chaque version contient 1057 images WebP détourées (fond transparent, vert résiduel retiré), aux mêmes noms : <code>db_&lt;clip&gt;_000.webp</code>, <code>db_&lt;clip&gt;_001.webp</code>… Plus grosse image : 25 Ko en site, 63 Ko en 1x, 160 Ko en 2x. Un site n'a besoin que d'une version : <code>site</code> suffit pour un Dr Bou affiché jusqu'à environ 160 px de haut sur un écran haute densité, <code>1x</code> jusqu'à 256 px, <code>2x</code> au-delà.</p>
+<p>Tous les clips sont alignés sur un même repère, celui de la neutre : Dr Bou garde exactement sa taille et sa place quand on passe de la neutre à « montrer » ou au vol, et revient au pixel près. Les images du vol ont été rendues avec une neutre réduite (échelle 0,75) ; le paquet les agrandit d'autant pour qu'il n'y ait aucun saut.</p>
+
+<h2 id="essayer">2. Essayer tout de suite</h2>
+<p><b>Par double-clic</b> sur <code>demo.html</code> : la démo lit alors <code>drbou\animations.js</code> (les navigateurs interdisent de lire un .json depuis le disque).</p>
+<p><b>Par un petit serveur local</b> (recommandé, c'est ainsi qu'un vrai site se comporte) : dans un terminal ouvert dans le dossier du paquet,</p>
+<pre><code>python -m http.server 8000</code></pre>
+<p>puis ouvrir <code>http://localhost:8000/demo.html</code>. N'importe quel serveur de fichiers fait l'affaire.</p>
+<p>Dans la démo : un bouton par enchaînement (avec son nombre de tours quand il est réglable), « Voler vers A » ou « vers B », un clic dans la scène pour l'y envoyer, un curseur de vitesse, une file de trois enchaînements, et le journal des événements.</p>
+
+<h2 id="installer">3. Installer sur n'importe quel site</h2>
+<p>Aucune pile particulière n'est supposée : il suffit que le site puisse servir des fichiers et contenir un peu de HTML.</p>
+<ol>
+<li>Copier le dossier <code>drbou</code> sur le site (par exemple à la racine, à côté de la page). On peut supprimer les versions d'images qu'on n'utilise pas.</li>
+<li>Mettre, là où Dr Bou doit se tenir, un élément vide : il devient le cadre de la neutre, et Dr Bou en déborde quand il ouvre les ailes ou s'envole.
+<pre><code>&lt;div id="drbou"&gt;&lt;/div&gt;</code></pre></li>
+<li>Ajouter, en bas de la page :
+<pre><code>&lt;script src="drbou/drbou.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  DrBou.creer("#drbou", {animations: "drbou/animations.json", taille: 200})
+    .then(bou =&gt; { window.bou = bou; bou.jouer("parler"); });
+&lt;/script&gt;</code></pre></li>
+</ol>
+<div class="note"><p><b>À savoir.</b> <code>taille</code> est la hauteur en pixels du cadre de la neutre. Dr Bou en déborde (ailes, vol) : le parent ne doit pas couper ce qui dépasse (<code>overflow: hidden</code>). Le lecteur pose <code>position: relative</code> sur l'élément s'il n'a pas de position, et le déplace avec <code>transform</code> pendant un vol : utiliser un élément réservé à Dr Bou. Les images sont chargées en fond au démarrage ; chaque enchaînement attend que ses images soient là.</p></div>
+<h3>Options de DrBou.creer</h3>
+<table>
+<tr><th>Option</th><th>Par défaut</th><th>Rôle</th></tr>
+<tr><td><code>animations</code></td><td><code>"animations.json"</code></td><td>Adresse du JSON (les images sont cherchées à côté), ou l'objet lui-même.</td></tr>
+<tr><td><code>taille</code></td><td>200</td><td>Hauteur en px du cadre de la neutre.</td></tr>
+<tr><td><code>version</code></td><td>selon l'écran</td><td><code>"site"</code>, <code>"1x"</code> ou <code>"2x"</code>. Sans valeur : 1x, ou 2x sur un écran haute densité.</td></tr>
+<tr><td><code>image</code></td><td>fichier à côté du JSON</td><td>Fonction <code>(nom, version) =&gt; adresse</code> qui fournit chaque image. Si elle renvoie l'image vide (GIF), le lecteur attend et redemande. Quand elle est donnée, le nom passé dans <code>animations</code> est aussi résolu par elle.</td></tr>
+<tr><td><code>vitesse</code></td><td>1</td><td>Réglage global de départ.</td></tr>
+<tr><td><code>repos</code></td><td>true</td><td>Joue de temps en temps l'enchaînement de repos (voir <code>repos</code> dans le JSON).</td></tr>
+<tr><td><code>prechargerTout</code></td><td>true</td><td>Charge toutes les images en fond dès le départ.</td></tr>
+</table>
+
+<h2 id="piloter">4. Piloter Dr Bou en JavaScript</h2>
+<pre><code>bou.jouer("parler");                         // joue un enchaînement ; les appels se mettent en file
+bou.jouer("montrer_gauche", {tours: 5});     // change les tours de l'étape réglable
+bou.jouer("attendre", {vitesse: 0.8, repetitions: 2});
+bou.enchainer(["ecouter", {nom: "montrer_droite", tours: 2}, "parler"]);
+await bou.jouer("parler");                   // la promesse est tenue à la fin de l'enchaînement
+
+bou.voler(document.querySelector("#titre")); // décolle, vole jusqu'à l'élément (centré dessus), atterrit
+bou.voler({x: 600, y: 300}, {duree: 3});     // coin haut gauche du cadre, en px de la page ; trajet de 3 s
+bou.voler(cible, {nom: "voler_gauche", tours: 4});
+bou.remettreEnPlace();                       // annule tous les déplacements
+
+bou.vitesse(1.5);                            // réglage global (renvoie la valeur courante)
+bou.arreter();                               // vide la file, revient à la neutre dès que possible
+bou.repos(false);                            // plus d'animation au repos
+bou.etat();                                  // {enchainement, file, pose, version, vitesse}
+
+bou.on("fin", e =&gt; console.log("fini :", e.nom));   // événements : pret, debut, clip, fin, repos
+document.querySelector("#drbou").addEventListener("drbou:fin", e =&gt; console.log(e.detail));</code></pre>
+<p>Au vol, le sens est choisi tout seul (vers la droite : <code>voler_droite</code>, vers la gauche : <code>voler_gauche</code>). Dr Bou décolle sur place, se déplace pendant les tours de battement, et atterrit sur la cible. Avec <code>duree</code>, le nombre de tours est calculé pour que le trajet dure à peu près ce temps.</p>
+<p>Le retour à la neutre est automatique : chaque enchaînement finit sur la neutre, et le lecteur l'affiche entre deux. Un enchaînement demandé pendant une animation de repos attend la fin du clip en cours (3 secondes au plus), pour ne jamais sauter d'une image à l'autre.</p>
+
+<h2 id="json">5. Le fichier animations.json</h2>
+<p>Un seul fichier décrit tout. Le bloc <code>_aide</code>, au début, explique chaque champ ; le lecteur l'ignore. Les champs à connaître :</p>
+<table>
+<tr><th>Champ</th><th>Rôle</th></tr>
+<tr><td><code>images_par_seconde</code></td><td>Cadence de base (16).</td></tr>
+<tr><td><code>vitesse</code></td><td>Multiplicateur global.</td></tr>
+<tr><td><code>repere</code></td><td>Le cadre de la neutre en 1x (512 × 512) : toutes les positions s'y rapportent.</td></tr>
+<tr><td><code>versions</code></td><td>Dossier et facteur de taille de chaque jeu d'images.</td></tr>
+<tr><td><code>version_par_defaut</code></td><td>Version imposée (null : selon l'écran).</td></tr>
+<tr><td><code>regle_des_images</code></td><td>Pourquoi chaque clip a 48 images : l'image 0 d'origine, identique à la pose de début, est retirée ; la dernière image est exactement la pose de fin.</td></tr>
+<tr><td><code>clips.&lt;nom&gt;</code></td><td><code>prefixe</code> (nom des images), <code>images</code> (nombre), <code>largeur</code>, <code>hauteur</code> (en 1x), <code>ancre</code> (x, y, echelle : place du cadre de la neutre dans l'image), <code>debut</code> et <code>fin</code> (poses), <code>boucle</code>, <code>vitesse</code>, <code>duree_s</code>, <code>famille</code>, <code>source</code>.</td></tr>
+<tr><td><code>enchainements.&lt;nom&gt;</code></td><td><code>description</code>, <code>etapes</code> (chacune : <code>clip</code> ou <code>choix</code>, <code>tours</code>, <code>tours_variables</code>, <code>deplacement</code>), <code>vitesse</code>, <code>repetitions</code>.</td></tr>
+<tr><td><code>repos</code></td><td><code>actif</code>, <code>enchainement</code>, <code>pause_min_s</code>, <code>pause_max_s</code>.</td></tr>
+<tr><td><code>absents</code></td><td>Ce qui n'est pas dans le paquet.</td></tr>
+</table>
+<p><b>Vitesse réelle</b> = <code>images_par_seconde</code> × <code>vitesse</code> du fichier × <code>bou.vitesse()</code> × <code>vitesse</code> de l'enchaînement × <code>vitesse</code> du clip. À 16 images par seconde, un clip dure 3 secondes.</p>
+<p><b>Règle des raccords</b> : une étape doit commencer sur la pose où finit la précédente (<code>debut</code> d'un clip = <code>fin</code> du clip d'avant). Le lecteur avertit dans la console sinon. Ne pas toucher aux ancres, largeurs et hauteurs : elles sont mesurées.</p>
+<p>Les enchaînements du paquet :</p>
+<table><tr><th>Nom</th><th>Ce qu'il fait</th><th>Étapes</th></tr><tr><td><code>attendre</code></td><td>Attente calme, un clignement (une variante au hasard).</td><td>une variante parmi attendre_g1, attendre_g2, attendre_g3, attendre_g4, attendre_g6</td></tr><tr><td><code>parler</code></td><td>Dr Bou parle (une variante au hasard).</td><td>une variante parmi parler_g2, parler_g5</td></tr><tr><td><code>ecouter</code></td><td>Dr Bou écoute (une variante au hasard).</td><td>une variante parmi ecouter_g1, ecouter_g2, ecouter_g5</td></tr><tr><td><code>montrer_gauche</code></td><td>Montre quelque chose à gauche : entrée, tenue répétée, sortie.</td><td>montrer_gauche_entree ; montrer_gauche_tenue × 3 tours (réglable) ; montrer_gauche_sortie</td></tr><tr><td><code>montrer_droite</code></td><td>Montre quelque chose à droite : entrée, tenue répétée, sortie.</td><td>montrer_droite_entree ; montrer_droite_tenue × 1 tours (réglable) ; montrer_droite_sortie</td></tr><tr><td><code>voler_gauche</code></td><td>S'envole vers la gauche : décollage, battements répétés pendant le trajet, atterrissage.</td><td>vol_gauche_decollage ; vol_gauche_boucle × 2 tours (réglable), avec déplacement ; vol_gauche_atterrissage</td></tr><tr><td><code>voler_droite</code></td><td>S'envole vers la droite : décollage, battements répétés pendant le trajet, atterrissage.</td><td>vol_droite_decollage ; vol_droite_boucle × 2 tours (réglable), avec déplacement ; vol_droite_atterrissage</td></tr></table>
+
+<h2 id="exemples">6. Exemples de modifications</h2>
+<h3>Tout ralentir de 20 %</h3>
+<pre><code>"vitesse": 0.8,</code></pre>
+<h3>Tenir le geste « montrer à droite » plus longtemps</h3>
+<pre><code>"montrer_droite": { ... "etapes": [
+  {"clip": "montrer_droite_entree"},
+  {"clip": "montrer_droite_tenue", "tours": 3, "tours_variables": true},
+  {"clip": "montrer_droite_sortie"}
+] ... }</code></pre>
+<h3>Ralentir un seul clip (le décollage à droite)</h3>
+<pre><code>"vol_droite_decollage": { ... "vitesse": 0.75, ... }</code></pre>
+<h3>Créer un enchaînement « bonjour » : parler puis montrer à droite</h3>
+<pre><code>"bonjour": {
+  "description": "Dit bonjour puis montre l'écran.",
+  "etapes": [
+    {"choix": ["parler_g2", "parler_g5"]},
+    {"clip": "montrer_droite_entree"},
+    {"clip": "montrer_droite_tenue", "tours": 2},
+    {"clip": "montrer_droite_sortie"}
+  ],
+  "vitesse": 1, "repetitions": 1
+}</code></pre>
+<p>puis <code>bou.jouer("bonjour")</code>.</p>
+<h3>Retirer une variante de l'attente</h3>
+<p>Enlever son nom de la liste <code>choix</code> de <code>attendre</code> (par exemple <code>"attendre_g6"</code>, la seule en 4 pas).</p>
+<h3>Repos plus rare, ou aucun</h3>
+<pre><code>"repos": {"actif": true, "enchainement": "attendre", "pause_min_s": 10, "pause_max_s": 25}
+"repos": {"actif": false, ...}</code></pre>
+<p>Après une modification, recharger la page (via le serveur). En double-clic, recopier le JSON dans <code>animations.js</code>.</p>
+
+<h2 id="site">7. Sur ton site</h2>
+<p>Sur le site de la formation, les images ne sont pas des fichiers : elles sont fournies par <code>window.__PH(nom)</code>, qui renvoie leur data URL (ou un GIF vide pour une image <code>db_…</code> pas encore arrivée). Le lecteur s'y branche par l'option <code>image</code>, et attend tant que l'image n'est pas là. Les noms d'image du paquet sont déjà plats, uniques et préfixés <code>db_</code>, comme cette convention le demande.</p>
+<pre><code>&lt;div id="drbou"&gt;&lt;/div&gt;
+&lt;script src="drbou.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+  DrBou.creer("#drbou", {
+    image: nom =&gt; window.__PH(nom),     // chaque image (db_vol_gauche_boucle_017.webp...) vient de __PH
+    animations: "db_animations.json",    // le JSON aussi, s'il est fourni sous ce nom ; sinon passer l'objet lui-même
+    version: "site",
+    taille: 180
+  }).then(bou =&gt; { window.bou = bou; bou.jouer("parler"); });
+&lt;/script&gt;</code></pre>
+<p>Le chiffrement et l'intégration des images et du JSON dans <code>drbou.enc</code> sont faits ailleurs ; ce paquet fournit les images (une version suffit, <code>site</code> recommandée), <code>animations.json</code> et <code>drbou.js</code>.</p>
+<h3>Poids</h3>
+<p>Si le site charge tout d'un coup et stocke les images en base64 (un tiers de plus), les clips validés pèsent environ <b>22,1 Mo</b> en version <code>site</code> (cadre de la neutre de 320 px, Dr Bou net jusqu'à environ 160 px de haut), ou environ 49,6 Mo en version <code>1x</code>. Pour alléger : retirer des variantes d'attente du JSON et leurs images (chaque clip pèse environ 1/22 du total).</p>
+
+<h2 id="clips">8. Liste des clips</h2>
+<p class="muted">Tailles en version 1x (site : × 0,625 ; 2x : × 2). Durée à 16 images par seconde.</p>
+<table>
+<tr><th>Clip</th><th>Famille</th><th>Poses</th><th>Images</th><th>Durée</th><th>Taille 1x</th><th>Poids site</th><th>Poids 1x</th><th>Poids 2x</th></tr>
+<tr><td><code>neutre</code></td><td>neutre</td><td>neutre → neutre</td><td>1</td><td>0,06 s</td><td>304 × 416</td><td>16 Ko</td><td>36 Ko</td><td>94 Ko</td></tr>
+<tr><td><code>attendre_g1</code></td><td>attendre</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 416</td><td>716 Ko</td><td>1,6 Mo</td><td>4,0 Mo</td></tr>
+<tr><td><code>attendre_g2</code></td><td>attendre</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 424</td><td>718 Ko</td><td>1,6 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>attendre_g3</code></td><td>attendre</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 416</td><td>720 Ko</td><td>1,6 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>attendre_g4</code></td><td>attendre</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 416</td><td>714 Ko</td><td>1,6 Mo</td><td>4,1 Mo</td></tr>
+<tr><td><code>attendre_g6</code></td><td>attendre</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 416</td><td>713 Ko</td><td>1,6 Mo</td><td>4,1 Mo</td></tr>
+<tr><td><code>parler_g2</code></td><td>parler</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>312 × 424</td><td>716 Ko</td><td>1,6 Mo</td><td>4,0 Mo</td></tr>
+<tr><td><code>parler_g5</code></td><td>parler</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 424</td><td>720 Ko</td><td>1,6 Mo</td><td>4,0 Mo</td></tr>
+<tr><td><code>ecouter_g1</code></td><td>écouter</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 432</td><td>716 Ko</td><td>1,6 Mo</td><td>4,0 Mo</td></tr>
+<tr><td><code>ecouter_g2</code></td><td>écouter</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 424</td><td>718 Ko</td><td>1,6 Mo</td><td>4,1 Mo</td></tr>
+<tr><td><code>ecouter_g5</code></td><td>écouter</td><td>neutre → neutre</td><td>48</td><td>3,0 s</td><td>304 × 416</td><td>723 Ko</td><td>1,6 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>montrer_gauche_entree</code></td><td>montrer à gauche : entrée</td><td>neutre → montrer_gauche</td><td>48</td><td>3,0 s</td><td>512 × 424</td><td>753 Ko</td><td>1,6 Mo</td><td>4,1 Mo</td></tr>
+<tr><td><code>montrer_gauche_tenue</code></td><td>montrer à gauche : tenue</td><td>montrer_gauche → montrer_gauche</td><td>48</td><td>3,0 s</td><td>512 × 424</td><td>801 Ko</td><td>1,7 Mo</td><td>4,4 Mo</td></tr>
+<tr><td><code>montrer_gauche_sortie</code></td><td>montrer à gauche : sortie</td><td>montrer_gauche → neutre</td><td>48</td><td>3,0 s</td><td>512 × 416</td><td>734 Ko</td><td>1,6 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>montrer_droite_entree</code></td><td>montrer à droite : entrée</td><td>neutre → montrer_droite</td><td>48</td><td>3,0 s</td><td>528 × 424</td><td>763 Ko</td><td>1,7 Mo</td><td>4,3 Mo</td></tr>
+<tr><td><code>montrer_droite_tenue</code></td><td>montrer à droite : tenue</td><td>montrer_droite → montrer_droite</td><td>48</td><td>3,0 s</td><td>512 × 424</td><td>765 Ko</td><td>1,6 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>montrer_droite_sortie</code></td><td>montrer à droite : sortie</td><td>montrer_droite → neutre</td><td>48</td><td>3,0 s</td><td>512 × 416</td><td>769 Ko</td><td>1,7 Mo</td><td>4,5 Mo</td></tr>
+<tr><td><code>vol_gauche_decollage</code></td><td>voler à gauche : décollage</td><td>neutre → vol_gauche</td><td>48</td><td>3,0 s</td><td>816 × 728</td><td>847 Ko</td><td>1,9 Mo</td><td>4,6 Mo</td></tr>
+<tr><td><code>vol_gauche_boucle</code></td><td>voler à gauche : boucle</td><td>vol_gauche → vol_gauche</td><td>48</td><td>3,0 s</td><td>848 × 584</td><td>817 Ko</td><td>1,8 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>vol_gauche_atterrissage</code></td><td>voler à gauche : atterrissage</td><td>vol_gauche → neutre</td><td>48</td><td>3,0 s</td><td>848 × 656</td><td>944 Ko</td><td>2,2 Mo</td><td>5,5 Mo</td></tr>
+<tr><td><code>vol_droite_decollage</code></td><td>voler à droite : décollage</td><td>neutre → vol_droite</td><td>48</td><td>3,0 s</td><td>832 × 728</td><td>814 Ko</td><td>1,8 Mo</td><td>4,5 Mo</td></tr>
+<tr><td><code>vol_droite_boucle</code></td><td>voler à droite : boucle</td><td>vol_droite → vol_droite</td><td>48</td><td>3,0 s</td><td>800 × 664</td><td>796 Ko</td><td>1,7 Mo</td><td>4,2 Mo</td></tr>
+<tr><td><code>vol_droite_atterrissage</code></td><td>voler à droite : atterrissage</td><td>vol_droite → neutre</td><td>48</td><td>3,0 s</td><td>848 × 696</td><td>933 Ko</td><td>2,1 Mo</td><td>5,4 Mo</td></tr>
+</table>
+
+<h2 id="manque">9. Ce qui manque</h2>
+<ul>
+<li>Montrer vers le haut, en haut à gauche et en haut à droite (phase 2) : pas de jeu complet validé (entrée, tenue, sortie), donc non inclus.</li>
+<li>Voler dans d'autres directions que gauche et droite : rien n'a été rendu. Un vol vers le haut ou le bas utilise le vol gauche ou droite selon le sens horizontal du trajet.</li>
+<li>Le badge n'est pas visible en vol de profil (boucle de vol) : c'est ainsi dans les clips validés.</li>
+<li>En version 2x, les images du vol sont agrandies d'un tiers par rapport au rendu (rendu avec une neutre réduite) : un peu moins nettes que les autres en 2x. En site et en 1x, elles sont réduites, donc nettes.</li>
+<li>Pas de son, pas de planche (sprite) : une planche de 48 images en 2x dépasserait les limites de taille de beaucoup d'appareils ; des images séparées se chargent mieux et se mettent en cache.</li>
+</ul>
+</main>
+</body>
+</html>

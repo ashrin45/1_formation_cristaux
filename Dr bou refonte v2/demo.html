@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dr Bou, démonstration</title>
+<style>
+:root{--bg:#f5f2ec;--surface:#fffdf9;--fg:#26211c;--muted:#6c645b;--line:#ddd5ca;--accent:#b8571f;--ok:#2d7a4b;color-scheme:light}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--bg:#171513;--surface:#211e1b;--fg:#ece6dd;--muted:#a99f93;--line:#38332d;--accent:#e38a52;--ok:#78c995;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.5 system-ui,"Segoe UI",sans-serif}
+main{max-width:1180px;margin:0 auto;padding:24px 16px 48px;display:grid;gap:18px}
+h1{margin:0;font-size:1.6rem} p{margin:0;max-width:75ch} .muted{color:var(--muted)}
+.scene{position:relative;height:560px;background:var(--surface);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.cible{position:absolute;border:2px dashed var(--line);border-radius:8px;display:grid;place-items:end center;font-size:.8rem;color:var(--muted);padding-bottom:4px}
+.cible.a{left:6%;top:300px} .cible.b{right:6%;top:180px}
+#bou{position:absolute;left:6%;top:300px;z-index:2}
+.barre{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.barre button{font:inherit;font-size:.9rem;padding:6px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);cursor:pointer}
+.barre button.principal{border-color:var(--accent);color:var(--accent)}
+.barre label{display:inline-flex;gap:6px;align-items:center;font-size:.9rem}
+.barre input[type=number]{width:3.5em;font:inherit} .barre select{font:inherit}
+.groupe{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:12px;display:grid;gap:10px}
+.groupe h2{margin:0;font-size:1rem}
+#journal{font:12px/1.5 ui-monospace,Consolas,monospace;max-height:180px;overflow:auto;margin:0;padding:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px;white-space:pre-wrap}
+#alerte{color:#a8433b}
+</style>
+</head>
+<body>
+<main>
+  <h1>Dr Bou, démonstration</h1>
+  <p class="muted">Tous les enchaînements du paquet. Le cadre pointillé A est la place de Dr Bou au repos ; B est une seconde cible pour le vol. Un clic dans la scène l'y envoie en volant. Mode d'emploi complet : LISEZMOI.html.</p>
+  <p id="alerte" hidden></p>
+  <div class="scene" id="scene">
+    <div class="cible a" id="A">A</div>
+    <div class="cible b" id="B">B</div>
+    <div id="bou"></div>
+  </div>
+  <section class="groupe">
+    <h2>Enchaînements</h2>
+    <div class="barre" id="boutons"></div>
+  </section>
+  <section class="groupe">
+    <h2>Vol</h2>
+    <div class="barre">
+      <button type="button" class="principal" id="versA">Voler vers A</button>
+      <button type="button" class="principal" id="versB">Voler vers B</button>
+      <label>durée du trajet <input type="number" id="duree" min="0" max="20" step="0.5" value="0"> s (0 : nombre de tours du JSON)</label>
+      <button type="button" id="place">Remettre en place</button>
+    </div>
+  </section>
+  <section class="groupe">
+    <h2>Réglages</h2>
+    <div class="barre">
+      <label>Vitesse <input type="range" id="vitesse" min="0.25" max="3" step="0.05" value="1"> <span id="vval">1</span></label>
+      <label><input type="checkbox" id="repos" checked> Animations au repos</label>
+      <button type="button" id="file">File : parler, montrer à droite, écouter</button>
+      <button type="button" id="stop">Arrêter</button>
+      <label>Version <select id="version"><option value="">auto</option><option>1x</option><option>2x</option><option>site</option></select></label>
+      <label>Taille <select id="taille"><option>150</option><option selected>200</option><option>260</option><option>320</option></select> px</label>
+    </div>
+    <div class="muted" id="etat">Chargement…</div>
+  </section>
+  <pre id="journal"></pre>
+</main>
+<script src="drbou/animations.js"></script>
+<script src="drbou/drbou.js"></script>
+<script>
+(async () => {
+  const q = new URLSearchParams(location.search), $ = id => document.getElementById(id);
+  const journal = t => { $("journal").textContent = new Date().toLocaleTimeString() + "  " + t + "\n" + $("journal").textContent; };
+  $("version").value = q.get("version") || ""; $("taille").value = q.get("taille") || "200";
+  const recharger = () => { const p = new URLSearchParams(); if ($("version").value) p.set("version", $("version").value); p.set("taille", $("taille").value); location.search = p; };
+  $("version").onchange = $("taille").onchange = recharger;
+  let bou;
+  try {
+    bou = await DrBou.creer("#bou", {animations: "drbou/animations.json", taille: Number($("taille").value), version: $("version").value || null});
+  } catch (e) { $("alerte").hidden = false; $("alerte").textContent = e.message; return; }
+  window.bou = bou;
+  const A = $("A"), B = $("B");
+  for (const c of [A, B]) { c.style.width = $("bou").style.width; c.style.height = $("bou").style.height; }
+  const D = bou.d;
+  for (const [nom, e] of Object.entries(D.enchainements)) {
+    const variable = e.etapes.some(x => x.tours_variables), b = document.createElement("button");
+    b.type = "button"; b.textContent = nom; b.title = e.description; b.className = "principal";
+    const span = document.createElement("span"); span.className = "barre"; span.appendChild(b);
+    let champ = null;
+    if (variable) {
+      const l = document.createElement("label"); champ = document.createElement("input");
+      champ.type = "number"; champ.min = 1; champ.max = 20; champ.value = e.etapes.find(x => x.tours_variables).tours || 1;
+      l.append(champ, " tours"); span.appendChild(l);
+    }
+    b.onclick = () => bou.jouer(nom, champ ? {tours: Number(champ.value)} : {});
+    $("boutons").appendChild(span);
+  }
+  const duree = () => Number($("duree").value) || undefined;
+  $("versA").onclick = () => bou.voler(A, {duree: duree()});
+  $("versB").onclick = () => bou.voler(B, {duree: duree()});
+  $("scene").addEventListener("click", ev => {
+    if (ev.target.closest(".cible")) return;
+    const w = parseFloat($("bou").style.width), h = parseFloat($("bou").style.height);
+    bou.voler({x: ev.pageX - w / 2, y: ev.pageY - h / 2}, {duree: duree()});
+  });
+  $("place").onclick = () => bou.remettreEnPlace();
+  $("vitesse").oninput = e => { bou.vitesse(Number(e.target.value)); $("vval").textContent = e.target.value; };
+  $("repos").onchange = e => bou.repos(e.target.checked);
+  $("file").onclick = () => bou.enchainer(["parler", "montrer_droite", "ecouter"]);
+  $("stop").onclick = () => bou.arreter();
+  for (const evt of ["debut", "fin", "clip", "repos"]) bou.on(evt, d => journal(evt + (d.nom ? " " + d.nom : "") + (d.clip ? " : " + d.clip : "") + (d.repos ? " (repos)" : "")));
+  setInterval(() => { const s = bou.etat(); $("etat").textContent = "version " + s.version + " · en cours : " + (s.enchainement || "rien") + " · en file : " + s.file + " · pose : " + (s.pose || "en mouvement") + " · vitesse " + s.vitesse; }, 250);
+  journal("prêt, version " + bou.version + (location.protocol === "file:" ? " (ouverture par double-clic : animations lues dans drbou/animations.js)" : ""));
+})();
+</script>
+</body>
+</html>
